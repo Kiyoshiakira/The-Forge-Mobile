@@ -47,6 +47,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.theforge.ui.theme.TheForgeTheme
+import com.example.theforge.ui.NewProjectWizardSheet
+import com.example.theforge.ui.NewProjectData
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
@@ -102,7 +104,20 @@ fun TheForgeApp() {
         is Screen.ProjectList -> ProjectListScreen(
             projects = projects,
             onProjectClick = { project -> currentScreen = Screen.ProjectLanding(project) },
-            onAddProject = { projectName -> projects.add(Project(name = projectName, owner = currentUser, collaborators = mutableStateListOf(currentUser), tools = mutableStateListOf(Tool("New Tool", ToolType.Story, tabs = mutableStateListOf(Tab("First Tab")))))) },
+            onAddProject = { projectData -> 
+                val newProject = Project(
+                    name = projectData.title, 
+                    owner = currentUser, 
+                    bannerUri = projectData.coverUri,
+                    collaborators = mutableStateListOf(currentUser).apply {
+                        projectData.invitees.forEach { invitee ->
+                            add(User(invitee, "Invited collaborator"))
+                        }
+                    },
+                    tools = mutableStateListOf(Tool("New Tool", ToolType.Story, tabs = mutableStateListOf(Tab("First Tab"))))
+                )
+                projects.add(newProject)
+            },
             onProfileClick = { currentScreen = Screen.Profile(currentUser) }
         )
         is Screen.ProjectLanding -> ProjectLandingScreen(
@@ -137,13 +152,21 @@ fun SplashScreen(onTimeout: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectListScreen(projects: List<Project>, onProjectClick: (Project) -> Unit, onAddProject: (String) -> Unit, onProfileClick: () -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
-    if (showDialog) { AddProjectDialog(onDismiss = { showDialog = false }, onAddProject = { onAddProject(it); showDialog = false }) }
+fun ProjectListScreen(projects: List<Project>, onProjectClick: (Project) -> Unit, onAddProject: (NewProjectData) -> Unit, onProfileClick: () -> Unit) {
+    var showWizard by remember { mutableStateOf(false) }
+    if (showWizard) { 
+        NewProjectWizardSheet(
+            onDismiss = { showWizard = false },
+            onCreateProject = { projectData -> 
+                onAddProject(projectData)
+                showWizard = false 
+            }
+        )
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Your Projects") }, actions = { IconButton(onClick = onProfileClick) { Icon(Icons.Default.Person, "Profile") } }) },
-        floatingActionButton = { FloatingActionButton(onClick = { showDialog = true }) { Icon(Icons.Default.Add, contentDescription = "Create New Project") } }
+        floatingActionButton = { FloatingActionButton(onClick = { showWizard = true }) { Icon(Icons.Default.Add, contentDescription = "Create New Project") } }
     ) { padding ->
         LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
             items(projects) { project ->
