@@ -61,6 +61,12 @@ data class NewProjectData(
     var invitees: MutableList<String> = mutableListOf()
 )
 
+// Wizard step constants
+private const val STEP_PROJECT_TYPE = 0
+private const val STEP_PROJECT_DETAILS = 1
+private const val STEP_TEMPLATE_SETTINGS = 2
+private const val TOTAL_STEPS = 3
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewProjectWizardSheet(
@@ -68,7 +74,7 @@ fun NewProjectWizardSheet(
     onCreateProject: (NewProjectData) -> Unit
 ) {
     val projectData = remember { NewProjectData() }
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { TOTAL_STEPS })
     val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
@@ -82,7 +88,7 @@ fun NewProjectWizardSheet(
         ) {
             // Progress indicator
             LinearProgressIndicator(
-                progress = { (pagerState.currentPage + 1) / 3f },
+                progress = { (pagerState.currentPage + 1) / TOTAL_STEPS.toFloat() },
                 modifier = Modifier.fillMaxWidth(),
             )
             
@@ -95,7 +101,7 @@ fun NewProjectWizardSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Step ${pagerState.currentPage + 1} of 3",
+                    text = "Step ${pagerState.currentPage + 1} of $TOTAL_STEPS",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -109,9 +115,9 @@ fun NewProjectWizardSheet(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 when (page) {
-                    0 -> ProjectTypeStep(projectData)
-                    1 -> ProjectDetailsStep(projectData)
-                    2 -> ProjectTemplateStep(projectData)
+                    STEP_PROJECT_TYPE -> ProjectTypeStep(projectData)
+                    STEP_PROJECT_DETAILS -> ProjectDetailsStep(projectData)
+                    STEP_TEMPLATE_SETTINGS -> ProjectTemplateStep(projectData)
                 }
             }
 
@@ -122,7 +128,7 @@ fun NewProjectWizardSheet(
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (pagerState.currentPage > 0) {
+                if (pagerState.currentPage > STEP_PROJECT_TYPE) {
                     OutlinedButton(
                         onClick = {
                             scope.launch {
@@ -136,7 +142,7 @@ fun NewProjectWizardSheet(
                     Spacer(modifier = Modifier.width(1.dp))
                 }
 
-                if (pagerState.currentPage < 2) {
+                if (pagerState.currentPage < STEP_TEMPLATE_SETTINGS) {
                     Button(
                         onClick = {
                             scope.launch {
@@ -144,7 +150,7 @@ fun NewProjectWizardSheet(
                             }
                         },
                         enabled = when (pagerState.currentPage) {
-                            1 -> projectData.title.isNotBlank()
+                            STEP_PROJECT_DETAILS -> projectData.title.isNotBlank()
                             else -> true
                         }
                     ) {
@@ -530,7 +536,7 @@ fun ProjectTemplateStep(projectData: NewProjectData) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    projectData.invitees.forEach { invitee ->
+                    projectData.invitees.forEachIndexed { index, invitee ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -552,7 +558,7 @@ fun ProjectTemplateStep(projectData: NewProjectData) {
                                 )
                             }
                             IconButton(
-                                onClick = { projectData.invitees.remove(invitee) }
+                                onClick = { projectData.invitees.removeAt(index) }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
