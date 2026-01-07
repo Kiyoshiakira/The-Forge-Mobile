@@ -1,0 +1,149 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    NEW PROJECT WIZARD - VISUAL GUIDE                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────┐
+│      STEP 1: PROJECT TYPE (1/3)        │
+├────────────────────────────────────────┤
+│ ████████████████████                   │ ← Progress bar (33%)
+│                                        │
+│ Step 1 of 3                            │
+│                                        │
+│ Choose Project Type                    │
+│ Select the type of creative project... │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │  📖  Story                    ✓    │ │ ← Selected (elevated)
+│ └────────────────────────────────────┘ │
+│ ┌────────────────────────────────────┐ │
+│ │  🎬  Script                        │ │
+│ └────────────────────────────────────┘ │
+│ ┌────────────────────────────────────┐ │
+│ │  📚  Comic                         │ │
+│ └────────────────────────────────────┘ │
+│ ┌────────────────────────────────────┐ │
+│ │  🎮  Game                          │ │
+│ └────────────────────────────────────┘ │
+│ ┌────────────────────────────────────┐ │
+│ │  🔨  Other                         │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│              [Next →]                  │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│    STEP 2: PROJECT DETAILS (2/3)       │
+├────────────────────────────────────────┤
+│ ████████████████████████████████       │ ← Progress bar (67%)
+│                                        │
+│ Step 2 of 3                            │
+│                                        │
+│ Project Details                        │
+│ Add a title and description...         │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ Project Title *                    │ │
+│ │ My Awesome Project                 │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ Short Pitch                        │ │
+│ │ A brief description...             │ │
+│ │                                    │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ Cover Image (Optional)                 │
+│ ┌────────────────────────────────────┐ │
+│ │         📷                         │ │
+│ │   Tap to add cover image           │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ [← Back]            [Next →]           │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│  STEP 3: TEMPLATE & SETTINGS (3/3)     │
+├────────────────────────────────────────┤
+│ ████████████████████████████████████   │ ← Progress bar (100%)
+│                                        │
+│ Step 3 of 3                            │
+│                                        │
+│ Template & Settings                    │
+│ Choose a template and configure...     │
+│                                        │
+│ Select Template                        │
+│ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐  │
+│ │Blank │ │Three-│ │Hero's│ │Screen│→ │ ← Horizontal scroll
+│ │  ✓  │ │ Act  │ │Journey│ │play │  │
+│ └──────┘ └──────┘ └──────┘ └──────┘  │
+│                                        │
+│ ─────────────────────────────────────  │
+│                                        │
+│ Project Features                       │
+│                                        │
+│ Enable Auditions                  ⚪   │ ← Toggles
+│ Allow voice actors to audition         │
+│                                        │
+│ Enable AI Assistance              ⚪   │
+│ Get AI-powered suggestions             │
+│                                        │
+│ ─────────────────────────────────────  │
+│                                        │
+│ Invite Collaborators (Optional)        │
+│ ┌────────────────────────┐  [+]       │
+│ │ john@example.com       │            │
+│ └────────────────────────┘            │
+│                                        │
+│ Invited:                               │
+│ 👤 alice@example.com          [×]     │
+│                                        │
+│ [← Back]        [Create Project]       │
+└────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         KEY FEATURES                                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✓ Modal Bottom Sheet (90% screen height)
+✓ 3 horizontal swipable steps with HorizontalPager
+✓ Linear progress indicator
+✓ Visual feedback on selections (elevation, colors)
+✓ Material 3 design throughout
+✓ Image picker integration for covers
+✓ Smart validation (title required)
+✓ Safe list operations for invitees
+✓ Mobile-optimized touch targets
+✓ Smooth animations and transitions
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      INTEGRATION FLOW                                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+User Flow:
+  1. Tap FAB (+) on Project List Screen
+  2. Wizard slides up from bottom
+  3. Select project type → Next
+  4. Enter title, pitch, cover → Next
+  5. Select template, toggle features, invite → Create
+  6. Project appears in list with all settings applied
+
+Data Flow:
+  NewProjectData {
+    type: ProjectType.Story
+    title: "My Awesome Project"
+    pitch: "A brief description..."
+    coverUri: Uri?
+    template: ProjectTemplate.Blank
+    enableAuditions: true
+    enableAI: false
+    invitees: ["alice@example.com"]
+  }
+  ↓
+  Project(
+    name = data.title,
+    owner = currentUser,
+    bannerUri = data.coverUri,
+    collaborators = [currentUser, ...invitees],
+    tools = [defaultTool]
+  )
+
