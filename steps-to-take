@@ -1,0 +1,431 @@
+# PR Templates & Copy-Paste Parts for The Forge Mobile
+Use these ready-to-copy PR bodies, titles, and related artifacts when creating PRs in the repository. Each section contains:
+- Suggested PR title
+- Problem statement / context
+- Proposed change summary
+- Files to change (suggested)
+- Testing steps / QA
+- Design brief for Gemini (visual assets you can paste into Gemini)
+- Labels / reviewers / rollout notes
+
+Replace bracketed placeholders (e.g., [PROJECT_NAME], [BRANCH], [ISSUE_ID]) with actual values.
+
+---
+
+## PR: New Project Wizard (Modal Stepper)
+Title
+- feat(project-wizard): Add New Project multi-step modal wizard
+
+Problem / Context
+- The current "Create New Project" is a simple AlertDialog that only captures a name. We need a low-friction, mobile-first wizard that lets users choose project type, add a cover, pick a template, optionally invite collaborators, and optionally enable auditions/AI—so creators can get started with the right defaults in under 60 seconds.
+
+What this PR does
+- Adds a ModalBottomSheet-based, 3-step new project wizard:
+  1. Choose type (Story / Script / Comic / Game / Other)
+  2. Title + short pitch + optional cover image
+  3. Template selection + toggles (Enable Auditions, Enable AI) + optional invite flow
+- Integrates with existing Project model creation path and shows a preview before finalizing.
+
+Files (suggested)
+- Add new file: `app/src/main/java/com/example/theforge/ui/NewProjectWizard.kt`
+- Update: `app/src/main/java/com/example/theforge/MainActivity.kt` to trigger sheet from FAB
+- Minor: `app/src/main/java/com/example/theforge/models/ProjectModels.kt` (if you extract models)
+
+Testing / QA
+1. Tap FAB or "Create New Project" -> wizard opens.
+2. Step through 3 steps; test skip/finish early behavior.
+3. Create project with cover upload and verify banner appears on ProjectLanding.
+4. Create with "Enable Auditions" and check the Auditions tab exists on the new project.
+5. Invite collaborator via the invite input and verify they appear in collaborators list.
+
+Design brief for Gemini (visuals)
+- Show a tall mobile sheet with three horizontally-swipable steps. Include:
+  - Step 1: grid of large type cards with icons
+  - Step 2: text fields (Title, Pitch), cover image placeholder with drop-in
+  - Step 3: templates carousel + toggles + invite input
+- Use brand accent (teal/indigo) + white cards + rounded corners. Provide 1–2 mockups: compact and expanded preview.
+
+Labels / Reviewers
+- labels: enhancement, ui, onboarding
+- reviewers: @Kiyoshiakira, @mobile-dev
+- Notes: add analytics events for step completion
+
+---
+
+## PR: Bottom Navigation + FAB Root Scaffold
+Title
+- feat(nav): Add bottom navigation and central FAB for quick actions
+
+Problem / Context
+- Current navigation uses a single-screen switch. A persistent bottom navigation with primary scopes (Home / Projects / Discover / Notifications / Profile) and a FAB for New Project will improve discoverability and consistency.
+
+What this PR does
+- Adds `MainBottomNav` composable and wraps content in a root Scaffold with bottomBar + FAB.
+- Moves current ProjectListScreen to the Projects tab.
+- Adds navigation state and minimal Discover and Notifications placeholders.
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/Navigation.kt` (new)
+- Update `MainActivity.kt` to compose the root scaffold
+
+Testing / QA
+1. App shows bottom bar with 5 tabs.
+2. Projects tab shows project list.
+3. FAB opens the New Project wizard from the previous PR.
+4. Behavior is consistent on rotation and with saved instance state.
+
+Design brief for Gemini
+- Provide a mobile mockup showing bottom nav icons, a centered FAB (with plus), and the Projects screen visible. Show pressed/active states.
+
+Labels / Reviewers
+- labels: enhancement, ui, navigation
+- reviewers: @Kiyoshiakira
+
+---
+
+## PR: Auditions Data Models + Auditions Tab (Initial)
+Title
+- feat(auditions): Add CastingCall and AuditionSubmission models + Auditions tab
+
+Problem / Context
+- Auditions are core to the product but missing. We need data models and a basic UI to list and create Casting Calls attached to a project.
+
+What this PR does
+- Adds new models:
+  - `CastingCall` (role, description, excerpt link, deadline, isOpen, submissions)
+  - `AuditionSubmission` (submitter, mediaUri, notes, rating)
+- Adds an Auditions tab to ProjectLandingScreen with a simple list of CastingCall cards and a "New Casting Call" sheet.
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/models/Auditions.kt` (new)
+- `app/src/main/java/com/example/theforge/ui/AuditionsScreen.kt` (new)
+- `MainActivity.kt` update: add Auditions tab handling
+
+Small snippet (copyable)
+```kotlin
+data class CastingCall(
+  val id: String = java.util.UUID.randomUUID().toString(),
+  val role: String,
+  val description: String,
+  val excerptTabTitle: String? = null,
+  val deadlineMillis: Long? = null,
+  var isOpen: Boolean = true,
+  val submissions: MutableList<AuditionSubmission> = mutableStateListOf()
+)
+
+data class AuditionSubmission(
+  val id: String = java.util.UUID.randomUUID().toString(),
+  val submitter: User,
+  val mediaUri: Uri?,
+  val notes: String,
+  var rating: Int? = null,
+  val timestamp: Long = System.currentTimeMillis()
+)
+```
+
+Testing / QA
+1. Open Project -> Auditions tab shows zero state with CTA.
+2. Create a casting call with role, description, and optional excerpt.
+3. Verify the new card appears and the "Open / Close" status toggles.
+4. Submit a fake audition (mediaUri can be null for testing) and see it listed.
+
+Design brief for Gemini
+- Render a Project Auditions tab with a list of cards. Show "New Casting Call" modal with role, description, excerpt attach (dropdown of project tabs), deadline picker, and toggles (open/public). Include a submission list mockup and a submission card with small video thumbnail + short notes.
+
+Labels / Reviewers
+- labels: feature, auditions, backend-needed
+- reviewers: @Kiyoshiakira, @ux
+
+---
+
+## PR: Audition Review Screen + Player
+Title
+- feat(auditions): Add audition review screen with media playback and quick actions
+
+Problem / Context
+- Reviewers need a focused UI to evaluate auditions: play media, view attached excerpt, rate, shortlist, message, or schedule.
+
+What this PR does
+- Adds `AuditionReviewScreen` composable with:
+  - media player (video / audio), playback controls
+  - left panel showing role excerpt & script lines
+  - right actions: Shortlist, Message, Schedule, Hire, Rating slider
+- Adds basic ExoPlayer integration hook or Compose AV placeholder (implementation can use Android's media player in follow-up).
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/AuditionReviewScreen.kt` (new)
+- Small media util helpers if needed
+
+Testing / QA
+1. Open a submission -> player plays sample (or local URI).
+2. Rate and shortlist; ensure submission model updates accordingly.
+3. Message action opens project chat with the user prefilled.
+
+Design brief for Gemini
+- Mockup: split-review layout adapted for mobile: top area media player (large), below player: role excerpt, and sticky action bar with Shortlist/Message/Schedule buttons. Use clear, accessible controls.
+
+Labels / Reviewers
+- labels: feature, auditions, media
+- reviewers: @Kiyoshiakira, @android-media
+
+---
+
+## PR: AI Assistant UI (Contextual Bottom Sheet)
+Title
+- feat(ai): Add contextual AI Assistant bottom sheet UI
+
+Problem / Context
+- AI features are planned but there's no UI. Add a contextual assistant that opens from the editor, shows suggested prompts, and can apply changes to the active editor tab.
+
+What this PR does
+- Adds a collapsible AI Assistant bottom sheet composable with:
+  - prompt templates: Generate logline, Expand scene, Rewrite tone, Create audition excerpt
+  - context preview (shows selected text/scene)
+  - apply button to insert suggestion into editor, with change metadata
+- Adds an AI button to EditorToolbar to open the assistant
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/AIAssistant.kt` (new)
+- `MainActivity.kt` small hook to open sheet
+
+Testing / QA
+1. Open editor, tap AI icon -> assistant sheet opens with contextual suggestions.
+2. Choose "Expand scene" -> preview generated text; press Apply -> content inserted into editor.
+3. Confirm undo/preview behavior (basic).
+
+Design brief for Gemini
+- Show assistant sheet with prompt cards, generated text preview pane, and "Apply" CTA. Include confidence indicator and small "Regenerate" control.
+
+Labels / Reviewers
+- labels: enhancement, ai
+- reviewers: @Kiyoshiakira, @ml
+
+---
+
+## PR: Editor Inline Comments & Presence Indicators
+Title
+- feat(editor): Add inline comments and presence indicators to editor
+
+Problem / Context
+- Collaboration needs contextual feedback. The rich text editor is present, but inline comments, mentions, and presence cursors are missing.
+
+What this PR does
+- Adds inline comment anchors with threaded display
+- Adds presence avatars & colored dot in ProjectHeader and a small "Currently editing" strip in the editor
+- Adds a simple "Add comment" flow that attaches to a selected range
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/EditorComments.kt` (new)
+- Update `ToolContent` composable in `MainActivity.kt` to show comment overlays
+
+Testing / QA
+1. Select text and add a comment; verify thread shows.
+2. Another user (simulate by adding a collaborator and toggling presence) appears in presence strip.
+3. Clicking a comment scrolls to the selection.
+
+Design brief for Gemini
+- Render editor with an anchored comment bubble on the right that expands into a thread. Show presence avatars in the header with green/gray dots.
+
+Labels / Reviewers
+- labels: enhancement, collaboration
+- reviewers: @Kiyoshiakira, @collab-team
+
+---
+
+## PR: Collaboration Roles & Invite Flow
+Title
+- feat(collab): Add roles (Owner/Admin/Editor/Commenter/Viewer/Caster) and improved invite dialog
+
+Problem / Context
+- Current "Invite" only adds a user by name. We need role-based invites and the ability to specify audition-related permissions.
+
+What this PR does
+- Extends the invite modal to include:
+  - Role dropdown
+  - Optional message
+  - Email invite (if not a user)
+  - Quick "Make caster" checkbox for audition rights
+- Persist roles in Project.collaborators with a small `ProjectRole` wrapper if necessary.
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/models/Collaborators.kt` (new)
+- Update `CollaborationHubContent` in `MainActivity.kt`
+
+Model snippet
+```kotlin
+enum class ProjectRole { OWNER, ADMIN, EDITOR, COMMENTER, VIEWER, CASTER }
+data class ProjectMember(val user: User, var role: ProjectRole)
+```
+
+Testing / QA
+1. Invite a user as Editor and verify edit capability on test device.
+2. Invite as Caster and ensure they can access audition management.
+
+Design brief for Gemini
+- Invite modal with text input, role selector, and "Send invite" CTA. Visualize role chips.
+
+Labels / Reviewers
+- labels: feature, collab, permissions
+- reviewers: @Kiyoshiakira
+
+---
+
+## PR: Template / Discover Screen
+Title
+- feat(discover): Add Discover & Templates screen for starting projects
+
+Problem / Context
+- Templates and a discover/feed will help creators start faster and find collaborators. The repo currently lacks a discover surface.
+
+What this PR does
+- Adds a Discover screen with:
+  - Templates carousel by type
+  - Creators open to collaborate (profiles)
+  - Public showcase projects (if enabled)
+- Includes "Use template" action to create a new project prefilled
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/DiscoverScreen.kt` (new)
+- Integrate into bottom nav
+
+Testing / QA
+1. Browse templates, preview a template, and use it to create a project.
+2. Ensure images and descriptions render correctly.
+
+Design brief for Gemini
+- Show template cards with example content and a preview modal. Include creator profile cards.
+
+Labels / Reviewers
+- labels: feature, discover, templates
+- reviewers: @Kiyoshiakira, @content
+
+---
+
+## PR: In-App Audition Recorder
+Title
+- feat(recording): Add quick in-app recorder for audition submissions
+
+Problem / Context
+- Submitters frequently record auditions on mobile. Providing a simple native recorder (audio/video) with countdown and retries will streamline submissions.
+
+What this PR does
+- Adds a simple recorder flow: countdown -> record -> preview -> confirm submission
+- Saves to local URI and attaches to AuditionSubmission
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/RecorderScreen.kt` (new)
+- Add permissions handling to `MainActivity.kt`
+
+Testing / QA
+1. Start a recording for audio and video (test on device/emulator).
+2. Preview and re-record.
+3. Submit, verify AuditionSubmission contains mediaUri.
+
+Design brief for Gemini
+- Recorder UI with large round record button, countdown overlay, and small waveform or video thumbnail during preview.
+
+Labels / Reviewers
+- labels: feature, media, auditions
+- reviewers: @Kiyoshiakira, @android-media
+
+---
+
+## PR: Visual Theme / Design Tokens
+Title
+- style(theme): Add design tokens and visual polishing (colors, type scale, spacing)
+
+Problem / Context
+- App uses Material defaults but lacks a refined visual system for brand consistency and for the Gemini visuals to reference.
+
+What this PR does
+- Adds `Theme.kt` adjustments:
+  - Accent color (e.g., DeepTeal: #0F7C82) and secondary accent
+  - Type scale and spacing system
+  - Card corner radius and elevation tokens
+- Applies minor style updates to ProjectCard and headers
+
+Files (suggested)
+- `app/src/main/java/com/example/theforge/ui/theme/Theme.kt` (update)
+- Update sample components to use tokens
+
+Design brief for Gemini
+- Provide a color palette file and 2 screen mockups using tokens (Project list + Project workspace) for consistent visuals.
+
+Labels / Reviewers
+- labels: style, design
+- reviewers: @design
+
+---
+
+## Generic PR Body / Checklist (copy-paste)
+Use this body for any PR; change the sections as needed.
+
+Title: [PR TITLE]
+
+Summary:
+- What: [Short summary of the change]
+- Why: [Problem being solved]
+- Impact: [User-visible impact and any DB/migrations]
+
+What I changed:
+- [List of files + short description per file]
+
+How to test:
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+Design assets:
+- Gemini brief: [Short 2–3 sentence visual brief for Gemini]
+- Screenshots / mockups: [attach images or link to Figma]
+
+Release notes:
+- [Short note for release changelog]
+
+Checklist:
+- [ ] Code builds and runs locally
+- [ ] Unit/UI tests added where appropriate
+- [ ] Verified on device/emulator
+- [ ] Added analytics events for feature
+- [ ] Accessibility checks (tap targets, labels, contrast)
+- [ ] Added to changelog
+
+---
+
+## Small Copyable Snippets
+Use these snippets inside PR descriptions or commit messages.
+
+Commit message template
+```
+feat: [short description of change]
+
+- Summary: [one-line summary]
+- Related: #[ISSUE_NUMBER] (if applicable)
+```
+
+Analytics events to add (example keys)
+- `project_wizard_opened`
+- `project_wizard_step_completed` (properties: stepIndex, projectType)
+- `casting_call_created`
+- `audition_submitted`
+
+Gemini Visual Prompt Template (short)
+```
+Mobile mockup: The Forge — Project Workspace
+- Screen: Project Landing / Auditions tab
+- Style: Material3, clean, creative, rounded cards, accent color [DEEP_TEAL/#0F7C82]
+- Elements: project banner, segmented tabs, audition cards (thumbnail, role, deadline), "New Casting Call" CTA
+- Provide: 2 variations: compact list and expanded review screen with media player
+```
+
+---
+
+## How I can help next
+- I can convert any of the above PR templates into actual PR branches and code changes — tell me which PR to start with.
+- Or I can generate Figma-ready visual specs for each PR for Gemini to render (I can write Figma component lists and assets).
+- If you want, I can prepare the first PR patch that adds the Auditions models + Auditions tab into `MainActivity.kt` as a runnable example.
+
+---
+
+If you want, tell me which PR to implement first and whether you'd like a runnable code change (I can prepare the exact Kotlin/Compose files for copy/paste or open a PR if you request that explicitly).  
+```
